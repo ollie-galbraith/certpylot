@@ -241,6 +241,7 @@ class Certificate():
         logging.debug("Fetching certificate thumbprint")
         return self.certificate.fingerprint(hashes.SHA1()).hex()
 
+
 class PrivateKey():
     def __init__(self, path=None, password=None):
         if path is not None:
