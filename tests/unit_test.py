@@ -6,12 +6,12 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 # Add the parent directory to the sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.certpylot.main import Certificate, PrivateKey, Csr
+from src.certpylot import SSLCertificate, SSHKeyPair, PrivateKey, Csr, KeyType
 
 class TestCertificate(unittest.TestCase):
     def setUp(self):
         self.url = "https://jsonplaceholder.typicode.com"
-        self.cert = Certificate(url=self.url)
+        self.cert = SSLCertificate(url=self.url)
         
     def test_certificate_initialization(self):
         certificate = self.cert.get()
@@ -28,16 +28,15 @@ class TestCertificate(unittest.TestCase):
 class TestPrivateKey(unittest.TestCase):
     def setUp(self):
         self.private_key_path = "./test_private_key.pem"
-        self.private_key = PrivateKey()
+        self.private_key = PrivateKey(key_type=KeyType.RSA)
         
     def test_generate_private_key(self):
-        self.private_key.generate()
+        self.private_key._generate()
         self.assertIsNotNone(self.private_key.private_key)
         self.assertIsInstance(self.private_key.private_key, RSAPrivateKey)
         
     def test_export_private_key(self):
-        self.private_key.generate()
-        self.private_key.export(self.private_key_path)
+        self.private_key.new(self.private_key_path)
         self.assertIsNotNone(self.private_key.serialized_key)
         self.assertTrue(os.path.exists(self.private_key_path))
         
@@ -52,8 +51,8 @@ class TestPrivateKey(unittest.TestCase):
 class TestCsr(unittest.TestCase):
     def setUp(self):
         self.csr = Csr()
-        self.private_key = PrivateKey()
-        self.private_key.generate()
+        self.private_key = PrivateKey(key_type=KeyType.RSA)
+        self.private_key._generate()
         self.private_key.serialize()
         
     def test_generate_csr(self):
@@ -69,6 +68,18 @@ class TestCsr(unittest.TestCase):
         
         if os.path.exists(csr_path):
             os.remove(csr_path)
+
+class TestSSHKeyPair(unittest.TestCase):
+    def setUp(self):
+        self.ssh_key_pair = SSHKeyPair(key_type=KeyType.RSA)
+        self.ssh_key_path = "./test_ssh_key"
+
+    def test_generate_ssh_key_pair(self):
+        self.ssh_key_pair.new(self.ssh_key_path)
+        self.assertTrue(os.path.exists(self.ssh_key_path))
+        self.assertTrue(os.path.exists(f"{self.ssh_key_path}.pub"))
+        os.remove(self.ssh_key_path)
+        os.remove(f"{self.ssh_key_path}.pub")
 
 if __name__ == '__main__':
     unittest.main()
