@@ -1,5 +1,7 @@
 # certpylot
 
+[![Python package](https://github.com/ollie-galbraith/certpylot/actions/workflows/python-package.yml/badge.svg)](https://github.com/ollie-galbraith/certpylot/actions/workflows/python-package.yml)
+
 **certpylot** is a Python library for managing SSL/TLS certificates with a focus on security and ease of use. It provides tools to fetch, inspect, and manipulate certificates, as well as generate and manage private keys and CSRs (Certificate Signing Requests).
 
 ## Features

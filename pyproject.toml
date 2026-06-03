@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "certpylot"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python library for managing SSL/TLS certificates with a focus on security and ease of use."
 authors = ["Oliver Galbraith <olivergalbraith0@gmail.com>"]
 license = "GPL-3.0"
