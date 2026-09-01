@@ -16,7 +16,10 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.8"
 acme = "^2.11.0"
-josepy = "^2.2.0"
+josepy = [
+    { version = "^1.15.0", markers = "python_version < '3.14'" },
+    { version = "^2.2.0", markers = "python_version >= '3.14'" }
+]
 cryptography = "^39.0.1"
 
 [tool.poetry.group.devs.dependencies]
