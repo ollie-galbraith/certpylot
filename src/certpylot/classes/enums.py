@@ -10,7 +10,7 @@ class KeyType(Enum):
     ECDSA = "ecdsa"
 
 
-class CertificateType(Enum):
+class Encoding(Enum):
     PEM = (
         "pem",
         serialization.Encoding.PEM,
@@ -29,3 +29,21 @@ class CertificateType(Enum):
 
     def load(self, data: bytes, backend: Any):
         return self._loader(data, backend)
+
+class PrivateKeyFormat(Enum):
+    TRADITIONAL_OPENSSL = (
+        "traditional_openssl",
+        serialization.PrivateFormat.TraditionalOpenSSL
+    )
+    PKCS8 = (
+        "pkcs8",
+        serialization.PrivateFormat.PKCS8
+    )
+    OPENSSH = (
+        "openssh",
+        serialization.PrivateFormat.OpenSSH
+    )
+
+    def __init__(self, label, format):
+        self.label = label
+        self.format = format

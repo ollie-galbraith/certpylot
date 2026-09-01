@@ -15,7 +15,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-acme = "^2.0.0"
+acme = "^2.11.0"
 cryptography = "^39.0.1"
 
 [tool.poetry.group.devs.dependencies]

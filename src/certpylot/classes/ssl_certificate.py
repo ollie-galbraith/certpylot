@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from typing import overload
 
 from .private_key import PrivateKey
-from .enums import CertificateType, KeyType
+from .enums import Encoding, KeyType
 
 
 class SSLCertificate():
@@ -24,7 +24,7 @@ class SSLCertificate():
     def __init__(url: str, path: None = None):
         ...
 
-    def __init__(self, path: str = None, url: str = None, port: int = 443, certificate_type: CertificateType = CertificateType.PEM, debug: bool = False, allow_unverified: bool = False):
+    def __init__(self, path: str = None, url: str = None, port: int = 443, certificate_type: Encoding = Encoding.PEM, debug: bool = False, allow_unverified: bool = False):
         log_level = logging.DEBUG if debug else logging.WARNING
         logging.basicConfig(level = log_level, format = '%(asctime)s | %(levelname)s | %(message)s')
 
@@ -39,7 +39,7 @@ class SSLCertificate():
         """
         return hasattr(self, 'certificate')
 
-    def _convert_timezone(self, datetime_obj, from_timezone, to_timezone) -> datetime:
+    def _convert_timezone(self, datetime_obj: datetime, from_timezone: ZoneInfo, to_timezone: ZoneInfo) -> datetime:
         """
         Convert a timezone-aware datetime object from one timezone to another.
 
@@ -50,30 +50,30 @@ class SSLCertificate():
         """
         if from_timezone == to_timezone:
             return datetime_obj
-        return datetime_obj.replace(tzinfo = from_timezone).astimezone(ZoneInfo(to_timezone))
+        return datetime_obj.replace(tzinfo = from_timezone).astimezone(to_timezone)
 
-    def _get_cert_from_url(self, url: str, port: int = 443, certificate_type: CertificateType = CertificateType.PEM, verify: bool = True) -> str:
+    def _get_cert_from_url(self, url: str, port: int = 443, certificate_type: Encoding = Encoding.PEM, verify: bool = True) -> str:
         """
         Fetch a certificate from a URL.
 
         :param url: The URL to fetch the certificate from
         :param port: The port to connect to (default: 443)
-        :param certificate_type: The type of certificate to fetch (default: PEM)
+        :param certificate_type: The encoding of the certificate to fetch (default: PEM)
         :param verify: Whether to verify the SSL certificate (default: True)
         :return: The certificate in the specified format
         """
 
-        def extract_cert(sock: socket, certificate_type: CertificateType):
+        def extract_cert(sock: socket, certificate_type: Encoding):
             der_cert = sock.getpeercert(binary_form = True)
-            if certificate_type == CertificateType.PEM:
+            if certificate_type == Encoding.PEM:
                 return ssl.DER_cert_to_PEM_cert(der_cert)
-            elif certificate_type == CertificateType.DER:
+            elif certificate_type == Encoding.DER:
                 return der_cert
             else:
                 raise ValueError(f"Unsupported certificate type: {certificate_type}")
         # Fetch the certificate from the server
 
-        def run_unverified(url: str, port: int, certificate_type: CertificateType) -> str:
+        def run_unverified(url: str, port: int, certificate_type: Encoding) -> str:
             logging.warning(f"SSL certificate verification failed for {hostname}:{port}")
             logging.warning("Rerunning certificate retrieval with SSL certificate verification disabled")
             return self._get_cert_from_url(url, port, certificate_type = certificate_type, verify = False)
@@ -195,7 +195,7 @@ class SSLCertificate():
 
     """ Properties """
 
-    def convert(self, path: str, output_type: CertificateType) -> None:
+    def convert(self, path: str, output_type: Encoding) -> None:
         """
         Convert the certificate to a different type.
 
@@ -260,7 +260,7 @@ class SSLCertificate():
         with open(path, "wb") as pfx_file:
             pfx_file.write(pfx_data)
 
-    def get(self, path: str = None, url: str = None, port: int = 443, certificate_type: CertificateType = CertificateType.PEM) -> dict[str]:
+    def get(self, path: str = None, url: str = None, port: int = 443, certificate_type: Encoding = Encoding.PEM) -> dict[str]:
         """
         Load a certificate (if not already loaded) and return its details as a dictionary.
 
@@ -280,16 +280,16 @@ class SSLCertificate():
                 raise Exception('Need to load a certificate first')
 
         return dict(
-            subject = self.subject,
-            issuer = self.issuer,
-            serial_number = self.serial_number,
-            fingerprint = self.fingerprint,
-            thumbprint = self.thumbprint,
+            subject          = self.subject,
+            issuer           = self.issuer,
+            serial_number    = self.serial_number,
+            fingerprint      = self.fingerprint,
+            thumbprint       = self.thumbprint,
             not_valid_before = self.not_valid_before().strftime('%Y-%m-%d %H:%M:%S %Z'),
-            not_valid_after = self.not_valid_after().strftime('%Y-%m-%d %H:%M:%S %Z')
+            not_valid_after  = self.not_valid_after().strftime('%Y-%m-%d %H:%M:%S %Z')
         )
 
-    def load(self, path: str = None, url: str = None, port: str = 443, certificate_type: CertificateType = CertificateType.PEM) -> x509.Certificate:
+    def load(self, path: str = None, url: str = None, port: str = 443, certificate_type: Encoding = Encoding.PEM) -> x509.Certificate:
         """
         Load a certificate from a file or URL.
 
@@ -307,7 +307,7 @@ class SSLCertificate():
                 cert_data = f.read()
             logging.debug(f"Certificate path: {path}")
 
-            if certificate_type == CertificateType.PEM:
+            if certificate_type == Encoding.PEM:
                 # Split into individual certs
                 certs = cert_data.split(b'-----END CERTIFICATE-----')
                 certs = [c + b'-----END CERTIFICATE-----\n' for c in certs if b'-----BEGIN CERTIFICATE-----' in c]
@@ -315,21 +315,21 @@ class SSLCertificate():
                 cert_obj = certificate_type.load(certs[0], default_backend())
                 if len(certs) > 1:
                     self.chain = [certificate_type.load(c, default_backend()) for c in certs[1:]]
-            elif certificate_type == CertificateType.DER:
+            elif certificate_type == Encoding.DER:
                 cert_obj = certificate_type.load(cert_data, default_backend())
 
         elif url:
             raw_cert_data = self._get_cert_from_url(url, port, certificate_type = certificate_type)
 
             cert_data = raw_cert_data
-            if certificate_type == CertificateType.PEM:
+            if certificate_type == Encoding.PEM:
                 cert_data = str.encode(raw_cert_data)
 
             cert_obj = certificate_type.load(cert_data, default_backend())
 
         self.certificate = cert_obj
 
-    def not_valid_after(self, convert_to_timezone = timezone.utc) -> datetime:
+    def not_valid_after(self, convert_to_timezone: ZoneInfo = timezone.utc) -> datetime:
         """
         Get the date and time after which the certificate is not valid.
 
@@ -345,7 +345,7 @@ class SSLCertificate():
         logging.debug(f"Converting datetime from UTC to {convert_to_timezone}")
         return self._convert_timezone(aware_datetime, timezone.utc, convert_to_timezone)
 
-    def not_valid_before(self, convert_to_timezone = timezone.utc) -> datetime:
+    def not_valid_before(self, convert_to_timezone: ZoneInfo = timezone.utc) -> datetime:
         """
         Get the date and time before which the certificate is not valid.
 

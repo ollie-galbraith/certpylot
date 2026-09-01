@@ -5,16 +5,16 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from typing import Union
 
-from .enums import KeyType
+from .enums import KeyType, PrivateKeyFormat, Encoding
 
 
 class PrivateKey():
-    def __init__(self, key_type: KeyType, path = None, passphrase = None):
+    def __init__(self, key_type: KeyType, path: str = None, passphrase: str = None):
         self.type = key_type
         if path is not None:
             self.load(path, passphrase)
 
-    def _export(self, path) -> None:
+    def _export(self, path: str) -> None:
         """
         Exports the private key to the specified path. If the key is encrypted, it will be saved in PKCS8 format, otherwise it will be saved in TraditionalOpenSSL format. The private key is saved with permissions set to 600 (read/write for owner only) to ensure security.
 
@@ -30,7 +30,7 @@ class PrivateKey():
 
         os.chmod(path, 0o600)
 
-    def _generate(self, key_size = 4096) -> Union[rsa.RSAPrivateKey, ed25519.Ed25519PrivateKey, ec.EllipticCurvePrivateKey]:
+    def _generate(self, key_size: int = 4096) -> Union[rsa.RSAPrivateKey, ed25519.Ed25519PrivateKey, ec.EllipticCurvePrivateKey]:
         """
         Generates a new private key based on the specified key type. For RSA keys, the key size can be specified (default is 4096 bits). For ED25519 and ECDSA keys, the appropriate generation method is used.
 
@@ -53,7 +53,7 @@ class PrivateKey():
 
         return self.private_key
 
-    def load(self, path, passphrase = None) -> Union[rsa.RSAPrivateKey, ed25519.Ed25519PrivateKey, ec.EllipticCurvePrivateKey]:
+    def load(self, path: str, passphrase: str = None) -> Union[rsa.RSAPrivateKey, ed25519.Ed25519PrivateKey, ec.EllipticCurvePrivateKey]:
         """
         Loads a private key from the specified file path. If the key is encrypted, a passphrase must be provided to decrypt it. The method reads the key file in binary mode and uses the appropriate deserialization method based on the key type.
 
@@ -85,7 +85,11 @@ class PrivateKey():
         self.serialize()
         self._export(path)
 
-    def serialize(self) -> bytes:
+    def serialize(
+        self,
+        encoding: Encoding = Encoding.PEM,
+        format: PrivateKeyFormat = PrivateKeyFormat.TRADITIONAL_OPENSSL,
+    ) -> bytes:
         """
         Serializes the private key into a byte string. If the key is encrypted, it will be serialized in PKCS8 format with encryption. If the key is not encrypted, it will be serialized in TraditionalOpenSSL format without encryption. For ED25519 keys, the OpenSSH format is used for serialization.
 
@@ -98,17 +102,17 @@ class PrivateKey():
         logging.debug("Serializing private key")
 
         serialization_args = dict(
-            encoding             = serialization.Encoding.PEM,
-            format               = serialization.PrivateFormat.TraditionalOpenSSL,
+            encoding             = encoding.encoding,
+            format               = format.format,
             encryption_algorithm = serialization.NoEncryption()
         )
 
         if self.type == KeyType.ED25519:
-            serialization_args['format'] = serialization.PrivateFormat.OpenSSH
+            serialization_args['format'] = PrivateKeyFormat.OPENSSH.format
 
         if hasattr(self, 'passphrase') is True:
             serialization_args['encryption_algorithm'] = serialization.BestAvailableEncryption(self.passphrase.encode("utf-8"))
-            serialization_args['format'] = serialization.PrivateFormat.PKCS8
+            serialization_args['format'] = PrivateKeyFormat.PKCS8.format
 
         self.serialized_key = self.private_key.private_bytes(**serialization_args)
 

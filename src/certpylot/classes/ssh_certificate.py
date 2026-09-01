@@ -2,7 +2,7 @@ import os
 import re
 import logging
 from cryptography.hazmat.primitives import serialization
-from .enums import KeyType
+from .enums import KeyType, Encoding
 from .private_key import PrivateKey
 
 
@@ -42,7 +42,7 @@ class SSHKeyPair():
         :param comment: An optional comment to associate with the public key.
         """
         self.public_key = self.private_key.public_key().public_bytes(
-            encoding = serialization.Encoding.OpenSSH,
+            encoding = Encoding.OPENSSH.encoding,
             format = serialization.PublicFormat.OpenSSH
         )
 
