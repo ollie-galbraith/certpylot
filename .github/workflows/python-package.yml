@@ -23,10 +23,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -81,6 +81,7 @@ jobs:
         id: get_previous_version
         run: |
           PREVIOUS_VERSION=$(curl -sL 'https://pypi.org/pypi/certpylot/json' | jq -r .info.version)
+          echo "Current version in PyPI: $PREVIOUS_VERSION"
           echo "PREVIOUS_VERSION=${PREVIOUS_VERSION#v}" >> $GITHUB_ENV
 
       - name: Check version increment
