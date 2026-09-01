@@ -48,10 +48,7 @@ jobs:
       - name: Lint with flake8
         run: |
           source venv/bin/activate
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 $GITHUB_WORKSPACE/src --exclude __pycache__ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 $GITHUB_WORKSPACE/src --exclude __pycache__ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          flake8 ./src --config ./.github/workflows/tox.ini
 
       - name: Test with pytest
         run: |
@@ -72,6 +69,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          apt install -y curl jq
           python -m pip install --upgrade pip
           python -m pip install poetry toml
 
@@ -83,7 +81,9 @@ jobs:
       - name: Get previous version
         id: get_previous_version
         run: |
-          PREVIOUS_VERSION=$(git tag --sort=-v:refname | head -n 1)
+          PREVIOUS_VERSION=$(curl --location 'https://pypi.org/pypi/certpylot/json' \
+                              --header 'Content-Type: application/json' \
+                              --header 'Host: pypi.org' | jq .info.version | tr -d '"')
           echo "PREVIOUS_VERSION=${PREVIOUS_VERSION#v}" >> $GITHUB_ENV
 
       - name: Check version increment

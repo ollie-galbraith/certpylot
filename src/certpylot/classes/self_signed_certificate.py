@@ -1,12 +1,12 @@
 import datetime
 from cryptography import x509
 from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
+from typing import Union
 
 from .private_key import PrivateKey
 from .enums import Encoding, KeyType
+
 
 class SelfSignedCertificate:
     def __init__(self, key_type: KeyType = KeyType.RSA, key_size: int = 2048, private_key: PrivateKey = None):
@@ -18,14 +18,14 @@ class SelfSignedCertificate:
 
     def generate(
         self,
-        country             : str | None = None,
-        state               : str | None = None,
-        locality            : str | None = None,
-        organization        : str | None = None,
-        organizational_unit : str | None = None,
-        common_name         : str | None = None,
-        sans                : list[str]  = ['localhost'],
-        valid_days          : int        = 365,
+        country             : Union[str, None] = None,
+        state               : Union[str, None] = None,
+        locality            : Union[str, None] = None,
+        organization        : Union[str, None] = None,
+        organizational_unit : Union[str, None] = None,
+        common_name         : Union[str, None] = None,
+        sans                : list[str]        = ['localhost'],
+        valid_days          : int              = 365,
     ):
         if not hasattr(self, "private_key"):
             self.private_key_class = PrivateKey(self.type)

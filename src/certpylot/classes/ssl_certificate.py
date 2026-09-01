@@ -70,6 +70,21 @@ class SSLCertificate():
             value = value.replace(tzinfo = timezone.utc)
         return value.astimezone(timezone.utc)
 
+    def _extract_cert(sock: socket, certificate_type: Encoding):
+        der_cert = sock.getpeercert(binary_form = True)
+        if certificate_type == Encoding.PEM:
+            return ssl.DER_cert_to_PEM_cert(der_cert)
+        elif certificate_type == Encoding.DER:
+            return der_cert
+        else:
+            raise ValueError(f"Unsupported certificate type: {certificate_type}")
+    # Fetch the certificate from the server
+
+    def _run_unverified(self, url: str, port: int, certificate_type: Encoding) -> str:
+        logging.warning(f"SSL certificate verification failed for {url}:{port}")
+        logging.warning("Rerunning certificate retrieval with SSL certificate verification disabled")
+        return self._get_cert_from_url(url, port, certificate_type = certificate_type, verify = False)
+
     def _get_cert_from_url(self, url: str, port: int = 443, certificate_type: Encoding = Encoding.PEM, verify: bool = True) -> str:
         """
         Fetch a certificate from a URL.
@@ -80,21 +95,6 @@ class SSLCertificate():
         :param verify: Whether to verify the SSL certificate (default: True)
         :return: The certificate in the specified format
         """
-
-        def extract_cert(sock: socket, certificate_type: Encoding):
-            der_cert = sock.getpeercert(binary_form = True)
-            if certificate_type == Encoding.PEM:
-                return ssl.DER_cert_to_PEM_cert(der_cert)
-            elif certificate_type == Encoding.DER:
-                return der_cert
-            else:
-                raise ValueError(f"Unsupported certificate type: {certificate_type}")
-        # Fetch the certificate from the server
-
-        def run_unverified(url: str, port: int, certificate_type: Encoding) -> str:
-            logging.warning(f"SSL certificate verification failed for {hostname}:{port}")
-            logging.warning("Rerunning certificate retrieval with SSL certificate verification disabled")
-            return self._get_cert_from_url(url, port, certificate_type = certificate_type, verify = False)
 
         if re.match(r'^\w*:\/\/.*$', url):
             hostname = urlparse(url).hostname
@@ -109,20 +109,20 @@ class SSLCertificate():
             with smtplib.SMTP(hostname, port) as server:
                 try:
                     server.starttls(context = context)
-                    return extract_cert(server.sock, certificate_type)
+                    return self._extract_cert(server.sock, certificate_type)
                 except ssl.SSLCertVerificationError as e:
                     if self.allow_unverified:
-                        return run_unverified(url, port, certificate_type)
+                        return self._run_unverified(url, port, certificate_type)
 
                     raise e
         else:
             with socket.create_connection((hostname, port)) as sock:
                 try:
                     with context.wrap_socket(sock, server_hostname = hostname) as ssock:
-                        return extract_cert(ssock, certificate_type)
+                        return self._extract_cert(ssock, certificate_type)
                 except ssl.SSLCertVerificationError as e:
                     if self.allow_unverified:
-                        return run_unverified(url, port, certificate_type)
+                        return self._run_unverified(url, port, certificate_type)
 
                     raise e
     """ Internal methods """

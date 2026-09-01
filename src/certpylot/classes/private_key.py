@@ -16,7 +16,9 @@ class PrivateKey():
 
     def _export(self, path: str) -> None:
         """
-        Exports the private key to the specified path. If the key is encrypted, it will be saved in PKCS8 format, otherwise it will be saved in TraditionalOpenSSL format. The private key is saved with permissions set to 600 (read/write for owner only) to ensure security.
+        Exports the private key to the specified path. If the key is encrypted, it will be saved in PKCS8 format,
+        otherwise it will be saved in TraditionalOpenSSL format. The private key is saved with permissions set to
+        600 (read/write for owner only) to ensure security.
 
         :param path: The file path where the private key will be saved.
         """
@@ -32,7 +34,8 @@ class PrivateKey():
 
     def _generate(self, key_size: int = 4096) -> Union[rsa.RSAPrivateKey, ed25519.Ed25519PrivateKey, ec.EllipticCurvePrivateKey]:
         """
-        Generates a new private key based on the specified key type. For RSA keys, the key size can be specified (default is 4096 bits). For ED25519 and ECDSA keys, the appropriate generation method is used.
+        Generates a new private key based on the specified key type. For RSA keys, the key size can be specified (default is 4096 bits).
+        For ED25519 and ECDSA keys, the appropriate generation method is used.
 
         :param key_size: The size of the RSA key to generate (ignored for ED25519 and ECDSA).
         :return: The generated private key object.
@@ -41,9 +44,9 @@ class PrivateKey():
         logging.debug(f"Generating new {self.type} private key")
         if self.type == KeyType.RSA:
             self.private_key = rsa.generate_private_key(
-                public_exponent = 65537,
-                key_size = key_size,
-                backend = default_backend()
+                public_exponent=65537,
+                key_size=key_size,
+                backend=default_backend()
             )
         if self.type == KeyType.ED25519:
             self.private_key = ed25519.Ed25519PrivateKey.generate()
@@ -55,7 +58,9 @@ class PrivateKey():
 
     def load(self, path: str, passphrase: str = None) -> Union[rsa.RSAPrivateKey, ed25519.Ed25519PrivateKey, ec.EllipticCurvePrivateKey]:
         """
-        Loads a private key from the specified file path. If the key is encrypted, a passphrase must be provided to decrypt it. The method reads the key file in binary mode and uses the appropriate deserialization method based on the key type.
+        Loads a private key from the specified file path. If the key is encrypted, a passphrase must be provided to
+        decrypt it. The method reads the key file in binary mode and uses the appropriate deserialization method
+        based on the key type.
 
         :param path: The file path from which to load the private key.
         :param passphrase: The passphrase to decrypt the private key (if it is encrypted).
@@ -65,8 +70,8 @@ class PrivateKey():
         with open(path, 'rb') as file:
             self.private_key = serialization.load_pem_private_key(
                 file.read(),
-                password = passphrase.encode() if passphrase is not None else None,  # Use a passphrase if the key is encrypted
-                backend = default_backend()
+                password=passphrase.encode() if passphrase is not None else None,  # Use a passphrase if the key is encrypted
+                backend=default_backend()
             )
 
         return self.private_key
@@ -91,7 +96,9 @@ class PrivateKey():
         format: PrivateKeyFormat = PrivateKeyFormat.TRADITIONAL_OPENSSL,
     ) -> bytes:
         """
-        Serializes the private key into a byte string. If the key is encrypted, it will be serialized in PKCS8 format with encryption. If the key is not encrypted, it will be serialized in TraditionalOpenSSL format without encryption. For ED25519 keys, the OpenSSH format is used for serialization.
+        Serializes the private key into a byte string. If the key is encrypted, it will be serialized in PKCS8 format with
+        encryption. If the key is not encrypted, it will be serialized in TraditionalOpenSSL format without encryption.
+        For ED25519 keys, the OpenSSH format is used for serialization.
 
         :return: The serialized private key as a byte string.
         """

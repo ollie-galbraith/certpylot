@@ -35,6 +35,7 @@ class Encoding(Enum):
     def load(self, data: bytes, backend: Any):
         return self._loader(data, backend)
 
+
 class PrivateKeyFormat(Enum):
     TRADITIONAL_OPENSSL = (
         "traditional_openssl",
