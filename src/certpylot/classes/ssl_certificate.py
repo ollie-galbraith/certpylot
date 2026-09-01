@@ -30,7 +30,12 @@ class SSLCertificate():
 
         self.allow_unverified = allow_unverified
         if path is not None or url is not None:
-            self.load(path = path, url = url, port = port, certificate_type = certificate_type)
+            self.load(
+                path             = path,
+                url              = url,
+                port             = port,
+                certificate_type = certificate_type
+            )
 
     """ Internal methods """
     def _check_certificate_loaded(self) -> bool:
@@ -70,7 +75,7 @@ class SSLCertificate():
             value = value.replace(tzinfo = timezone.utc)
         return value.astimezone(timezone.utc)
 
-    def _extract_cert(sock: socket, certificate_type: Encoding):
+    def _extract_cert(self, sock: socket.socket, certificate_type: Encoding):
         der_cert = sock.getpeercert(binary_form = True)
         if certificate_type == Encoding.PEM:
             return ssl.DER_cert_to_PEM_cert(der_cert)
@@ -109,7 +114,7 @@ class SSLCertificate():
             with smtplib.SMTP(hostname, port) as server:
                 try:
                     server.starttls(context = context)
-                    return self._extract_cert(server.sock, certificate_type)
+                    return self._extract_cert(sock=server.sock, certificate_type=certificate_type)
                 except ssl.SSLCertVerificationError as e:
                     if self.allow_unverified:
                         return self._run_unverified(url, port, certificate_type)
@@ -119,7 +124,7 @@ class SSLCertificate():
             with socket.create_connection((hostname, port)) as sock:
                 try:
                     with context.wrap_socket(sock, server_hostname = hostname) as ssock:
-                        return self._extract_cert(ssock, certificate_type)
+                        return self._extract_cert(sock=ssock, certificate_type=certificate_type)
                 except ssl.SSLCertVerificationError as e:
                     if self.allow_unverified:
                         return self._run_unverified(url, port, certificate_type)
