@@ -33,15 +33,11 @@ jobs:
           python -m pip install flake8 pytest requests toml --break-system-packages
           if [ -f requirements.txt ]; then pip install -r requirements.txt --break-system-packages; fi
 
-      - name: Install module dependencies
+      - name: Install module and dependencies
         run: |
-          DEPENDENCIES=$(python .github/workflows/get_dependencies.py)
-          if [ -n "$DEPENDENCIES" ]; then
-            echo "Installing dependencies: $DEPENDENCIES"
-            python -m pip install $DEPENDENCIES --break-system-packages
-          else
-            echo "No dependencies found."
-          fi
+          cd $GITHUB_WORKSPACE
+          pwd
+          pip install . --break-system-packages
 
       - name: Lint with flake8
         run: |
