@@ -52,6 +52,24 @@ class SSLCertificate():
             return datetime_obj
         return datetime_obj.replace(tzinfo = from_timezone).astimezone(to_timezone)
 
+    def _get_validity_datetime(self, field_name: str) -> datetime:
+        """
+        Return a timezone-aware UTC datetime for a certificate validity field.
+
+        cryptography exposes `not_valid_before_utc` / `not_valid_after_utc` in newer
+        versions, while older versions expose `not_valid_before` / `not_valid_after`
+        as naive datetimes. This method keeps compatibility across both styles.
+        """
+        utc_field = f'{field_name}_utc'
+        value = getattr(self.certificate, utc_field, None)
+        if value is None:
+            value = getattr(self.certificate, field_name, None)
+        if value is None:
+            raise AttributeError(f'Certificate does not expose {field_name} or {utc_field}')
+        if value.tzinfo is None:
+            value = value.replace(tzinfo = timezone.utc)
+        return value.astimezone(timezone.utc)
+
     def _get_cert_from_url(self, url: str, port: int = 443, certificate_type: Encoding = Encoding.PEM, verify: bool = True) -> str:
         """
         Fetch a certificate from a URL.
@@ -117,7 +135,7 @@ class SSLCertificate():
 
         :return: The number of days until the certificate expires
         """
-        not_valid_after = self.certificate.not_valid_after_utc.replace(tzinfo = timezone.utc)
+        not_valid_after = self._get_validity_datetime('not_valid_after')
         now = datetime.now(timezone.utc)
         return (not_valid_after - now).days
 
@@ -338,7 +356,7 @@ class SSLCertificate():
         """
 
         logging.debug("Fetching certificate not valid after time")
-        aware_datetime = self.certificate.not_valid_after_utc.replace(tzinfo = timezone.utc)
+        aware_datetime = self._get_validity_datetime('not_valid_after')
         logging.debug(f"Certificate not valid after {aware_datetime} - UTC")
         if convert_to_timezone == timezone.utc:
             return aware_datetime
@@ -354,7 +372,7 @@ class SSLCertificate():
         """
 
         logging.debug("Fetching certificate not valid before time")
-        aware_datetime = self.certificate.not_valid_before_utc.replace(tzinfo = timezone.utc)
+        aware_datetime = self._get_validity_datetime('not_valid_before')
         logging.debug(f"Certificate not valid before {aware_datetime} - UTC")
         if convert_to_timezone == timezone.utc:
             return aware_datetime

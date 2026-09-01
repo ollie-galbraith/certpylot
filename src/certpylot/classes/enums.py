@@ -21,6 +21,11 @@ class Encoding(Enum):
         serialization.Encoding.DER,
         x509.load_der_x509_certificate
     )
+    OPENSSH = (
+        "openssh",
+        serialization.Encoding.OpenSSH,
+        None
+    )
 
     def __init__(self, label, encoding, loader):
         self.label = label

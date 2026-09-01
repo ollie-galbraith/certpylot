@@ -56,12 +56,12 @@ class TestCsr(unittest.TestCase):
         self.private_key.serialize()
         
     def test_generate_csr(self):
-        self.csr.generate('Test CSR', self.private_key.serialized_key)
+        self.csr.generate(['Test CSR'], self.private_key.serialized_key)
         self.assertIsNotNone(self.csr.csr)
         self.assertIsInstance(self.csr.csr, bytes)
         
     def test_export_csr(self):
-        self.csr.generate('Test CSR', self.private_key.serialized_key)
+        self.csr.generate(['Test CSR'], self.private_key.serialized_key)
         csr_path = "./test_csr.pem"
         self.csr.export(csr_path)
         self.assertTrue(os.path.exists(csr_path))
