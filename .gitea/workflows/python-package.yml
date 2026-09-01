@@ -31,19 +31,21 @@ jobs:
       - name: Setup Python Virtual Enviornment
         run: |
           python -m venv venv
-          source venv/bin/activate
 
       - name: Install build dependencies
         run: |
+          source venv/bin/activate
           pip install flake8 pytest requests toml
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Install module and dependencies
         run: |
+          source venv/bin/activate
           pip install .
 
       - name: Lint with flake8
         run: |
+          source venv/bin/activate
           # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
@@ -51,4 +53,5 @@ jobs:
 
       - name: Test with pytest
         run: |
+          source venv/bin/activate
           pytest
