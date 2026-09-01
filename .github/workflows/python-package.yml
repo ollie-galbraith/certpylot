@@ -80,9 +80,7 @@ jobs:
       - name: Get previous version
         id: get_previous_version
         run: |
-          PREVIOUS_VERSION=$(curl --location 'https://pypi.org/pypi/certpylot/json' \
-                              --header 'Content-Type: application/json' \
-                              --header 'Host: pypi.org' | jq .info.version | tr -d '"')
+          PREVIOUS_VERSION=$(curl -sL 'https://pypi.org/pypi/certpylot/json' | jq -r .info.version)
           echo "PREVIOUS_VERSION=${PREVIOUS_VERSION#v}" >> $GITHUB_ENV
 
       - name: Check version increment
