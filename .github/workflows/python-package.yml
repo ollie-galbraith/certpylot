@@ -69,7 +69,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apt install -y curl jq
           python -m pip install --upgrade pip
           python -m pip install poetry toml
 
