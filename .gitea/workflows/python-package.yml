@@ -28,16 +28,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Setup Python Virtual Enviornment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
       - name: Install build dependencies
         run: |
-          python -m pip install flake8 pytest requests toml --break-system-packages
-          if [ -f requirements.txt ]; then pip install -r requirements.txt --break-system-packages; fi
+          pip install flake8 pytest requests toml
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Install module and dependencies
         run: |
-          cd $GITHUB_WORKSPACE
-          pwd
-          pip install . --break-system-packages
+          pip install .
 
       - name: Lint with flake8
         run: |
